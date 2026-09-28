@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>STEERING COMMITTEE — Everyone steers. Nobody agrees.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    :root {
+      --bg-parchment: #FBF9F5;
+      --bg-card: #F4EFE6;
+      --text-primary: #2C221E;
+      --text-secondary: #6B5B52;
+      --accent-gold: #D4A338;
+      --accent-emerald: #1F6B4B;
+      --border-subtle: #D8CEBE;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg-parchment);
+      color: var(--text-primary);
+      font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .dossier {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 40px 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(44, 34, 30, 0.06);
+      position: relative;
+    }
+    .confidential-stamp {
+      display: inline-block;
+      border: 2px solid var(--accent-emerald);
+      color: var(--accent-emerald);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 2px;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 3px;
+      transform: rotate(-3deg);
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .tagline {
+      font-style: italic;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+    }
+    .memo-body {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 20px 0;
+      margin-bottom: 24px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #EAE3D2;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-gold);
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="dossier">
+    <div class="confidential-stamp">Internal Memorandum</div>
+    <h1>STEERING COMMITTEE</h1>
+    <p class="tagline">“Everyone steers. Nobody agrees.”</p>
+    <div class="memo-body">
+      The Board of Directors is assembling. 2 to 8 committee members will share the wheel of a single company vehicle, navigating toward competing secret corporate objectives.
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span>Executive Session Adjourned — Phase 0 Ready</span>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
