@@ -33,7 +33,8 @@ export class DebriefScreen {
   }
 
   update(data) {
-    const { round = 1, destinations = {}, scores = {}, serverTime, phaseEndTime } = data;
+    const round = (data.round !== undefined) ? data.round : 1;
+    const { destinations = {}, scores = {}, serverTime, phaseEndTime } = data;
     this.isReady = false;
 
     if (this.readyBtn) {
@@ -42,16 +43,22 @@ export class DebriefScreen {
     }
 
     if (this.titleEl) {
-      this.titleEl.textContent = `ROUND ${round} RESULTS`;
+      if (round === 0) {
+        this.titleEl.textContent = 'PRACTICE ROUND COMPLETE';
+      } else {
+        this.titleEl.textContent = `ROUND ${round} RESULTS`;
+      }
     }
 
     // Update cumulative player scores in global app state
     if (!this.app.state.cumulativeScores) {
       this.app.state.cumulativeScores = {};
     }
-    Object.entries(scores).forEach(([pid, pts]) => {
-      this.app.state.cumulativeScores[pid] = (this.app.state.cumulativeScores[pid] || 0) + pts;
-    });
+    if (round !== 0) {
+      Object.entries(scores).forEach(([pid, pts]) => {
+        this.app.state.cumulativeScores[pid] = (this.app.state.cumulativeScores[pid] || 0) + pts;
+      });
+    }
 
     // Populate score table
     if (this.scoreTbody) {

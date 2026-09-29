@@ -1395,3 +1395,43 @@ p {
   gap: 8px;
 }
 
+/* ==========================================================================
+   ONBOARDING TOOLTIP BUBBLE
+   ========================================================================== */
+.tooltip-bubble {
+  position: absolute;
+  z-index: 100;
+  background-color: var(--accent-navy, #1B3B6F);
+  color: #FFFFFF;
+  font-family: var(--font-body, inherit);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 250px;
+  pointer-events: auto;
+  transition: opacity 200ms ease;
+}
+
+.tooltip-bubble.hidden {
+  display: none !important;
+}
+
+#tooltip-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+#tooltip-dismiss:hover {
+  color: #FFFFFF;
+}
+

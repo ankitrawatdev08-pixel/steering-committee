@@ -96,11 +96,11 @@ async function runGameFlowTest() {
     client1.emit('start-game');
 
     const startedData = await p1StartedPromise;
-    assert.equal(startedData.round, 1);
+    assert.equal(startedData.round, 0);
     assert.equal(startedData.totalRounds, 6); // N=3 -> 3 * ceil(4/3) = 6
     assert.ok(startedData.map.landmarks.length === 6);
     assert.equal(room.state, GAME_STATES.REVEAL);
-    console.log(`✔ ASSERTION PASSED: Game started, round 1 of ${startedData.totalRounds}, state = REVEAL.`);
+    console.log(`✔ ASSERTION PASSED: Game started, round 0 (PRACTICE) of ${startedData.totalRounds}, state = REVEAL.`);
 
     const [reveal1, reveal2, reveal3] = await Promise.all([
       p1RevealPromise,
@@ -111,7 +111,9 @@ async function runGameFlowTest() {
     assert.ok(reveal1.destination, 'Player 1 received private destination');
     assert.ok(reveal2.destination, 'Player 2 received private destination');
     assert.ok(reveal3.destination, 'Player 3 received private destination');
-    console.log('✔ ASSERTION PASSED: Private round-reveal received by all 3 players.');
+    assert.equal(reveal1.round, 0);
+    assert.equal(reveal1.gavels, 0);
+    console.log('✔ ASSERTION PASSED: Private round-reveal received by all 3 players (Round 0 Practice).');
 
     // 4. Wait for reveal timer to finish and transition to STEERING
     await new Promise(r => setTimeout(r, 200));
@@ -141,51 +143,38 @@ async function runGameFlowTest() {
     assert.equal(tickData1.heading, clearDir);
     console.log(`✔ ASSERTION PASSED: Tick 1 resolved plurality (MOVE ${clearDir}), votes broadcast correctly.`);
 
-    // 6. Play through Round 1 to PARK on tick 6
-    // Listen for tick updates until tick 5 arrives
+    // 6. Play through Round 0 (5 fuel ticks to round exhaustion)
+    const debriefPromise = waitForEvent(client1, 'round-debrief');
     while (true) {
       const update = await waitForEvent(client1, 'tick-update');
       if (update.tick === 5) {
+        assert.equal(update.roundEnds, true);
         break;
       }
     }
 
-    // Now on tick 6, all vote PARK
-    const debriefPromise = waitForEvent(client1, 'round-debrief');
-    const tickDataParkPromise = waitForEvent(client1, 'tick-update');
-
-    client1.emit('vote', { direction: 'PARK' });
-    client2.emit('vote', { direction: 'PARK' });
-    client3.emit('vote', { direction: 'PARK' });
-
-    const tickDataPark = await tickDataParkPromise;
-    assert.equal(tickDataPark.result, 'PARK');
-    assert.equal(tickDataPark.roundEnds, true);
-    console.log('✔ ASSERTION PASSED: Tick 6 PARK resolved, roundEnds = true.');
-
-    // 7. Debrief verification
+    // 7. Debrief verification for Round 0 Practice
     const debriefData = await debriefPromise;
-    assert.equal(debriefData.round, 1);
+    assert.equal(debriefData.round, 0);
     assert.ok(debriefData.destinations[p1Id], 'Debrief contains p1 destination');
     assert.ok(typeof debriefData.scores[p1Id] === 'number', 'Scores computed for p1');
     assert.ok(typeof debriefData.scores[p2Id] === 'number', 'Scores computed for p2');
     assert.ok(typeof debriefData.scores[p3Id] === 'number', 'Scores computed for p3');
     assert.equal(room.state, GAME_STATES.DEBRIEF);
-    console.log(`✔ ASSERTION PASSED: Round 1 DEBRIEF received. Scores: Alice=${debriefData.scores[p1Id]}, Bob=${debriefData.scores[p2Id]}, Charlie=${debriefData.scores[p3Id]}.`);
+    console.log(`✔ ASSERTION PASSED: Round 0 PRACTICE DEBRIEF received.`);
 
-    // 8. Ready skip mechanic in Debrief
-    const round2RevealPromise = waitForEvent(client1, 'round-reveal');
+    // 8. Ready skip mechanic in Debrief -> advances to Round 1
+    const round1RevealPromise = waitForEvent(client1, 'round-reveal');
     client1.emit('ready');
     client2.emit('ready');
     client3.emit('ready');
 
-    const round2Data = await round2RevealPromise;
-    assert.equal(round2Data.round, 2);
-    console.log('✔ ASSERTION PASSED: All players tapped ready -> immediately advanced to Round 2.');
+    const round1Data = await round1RevealPromise;
+    assert.equal(round1Data.round, 1);
+    console.log('✔ ASSERTION PASSED: All players tapped ready -> immediately advanced to Round 1.');
 
-    // 9. Fast-forward through remaining rounds (rounds 2 through 6)
-    // In each round: wait for reveal -> vote PARK after tick 5 -> ready in debrief
-    for (let r = 2; r <= 6; r++) {
+    // 9. Fast-forward through remaining rounds (rounds 1 through 6)
+    for (let r = 1; r <= 6; r++) {
       // Wait for steering
       await new Promise(res => setTimeout(res, 120));
 

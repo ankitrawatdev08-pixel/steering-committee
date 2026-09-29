@@ -30,10 +30,10 @@ const roomManager = new RoomManager();
   room._startDebrief();
   assert.ok(room.timers.has('debrief_timer'), 'Debrief timer active');
 
-  // Advance to round 2
+  // Advance from round 0 practice round to round 1
   room._advanceFromDebrief();
-  assert.equal(room.round, 2);
-  assert.ok(room.timers.size > 0, 'Round 2 timers active');
+  assert.equal(room.round, 1);
+  assert.ok(room.timers.size > 0, 'Round 1 timers active');
 
   // Destroy room
   roomManager.destroyRoom(room.code);

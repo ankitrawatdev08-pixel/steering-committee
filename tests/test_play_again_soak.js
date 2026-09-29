@@ -38,7 +38,7 @@ async function playSingleGame(gameNumber) {
   // Start game
   room.startGame(hostPlayer.id);
   assert.equal(room.state, GAME_STATES.REVEAL);
-  assert.equal(room.round, 1);
+  assert.equal(room.round, 0);
   assert.equal(room.totalRounds, 6);
 
   // Play through all 6 rounds

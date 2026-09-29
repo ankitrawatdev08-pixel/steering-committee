@@ -191,7 +191,7 @@ class App {
     // Game started
     this.socket.on('game-started', (data) => {
       console.log('[Socket] game-started:', data);
-      this.state.round = data.round || 1;
+      this.state.round = (data.round !== undefined) ? data.round : 0;
       this.state.totalRounds = data.totalRounds || 3;
       this.state.chairId = data.chairId;
       this.state.map = data.map;
@@ -211,7 +211,7 @@ class App {
     // Round reveal (destination assignment)
     this.socket.on('round-reveal', (data) => {
       console.log('[Socket] round-reveal:', data);
-      this.state.round = data.round;
+      this.state.round = (data.round !== undefined) ? data.round : 0;
       this.state.chairId = data.chairId;
 
       this.showScreen('game');

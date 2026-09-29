@@ -12,6 +12,7 @@ const {
   AVATAR_COLOURS,
   AVATAR_ICONS,
   BOT_NAMES,
+  BOT_PROFILES,
   PLAYER_LIMITS
 } = require('./constants');
 
@@ -19,6 +20,7 @@ const MapGenerator = require('./MapGenerator');
 const DestinationAssigner = require('./DestinationAssigner');
 const TickResolver = require('./TickResolver');
 const Scoring = require('./Scoring');
+const BotLogic = require('./BotLogic');
 const { sanitizePlayerName, resolveDuplicateName } = require('./ProfanityFilter');
 
 class GameRoom {
@@ -177,14 +179,28 @@ class GameRoom {
       throw new Error('Room is full.');
     }
 
-    // Pick unused bot name from BOT_NAMES
-    const existingNames = new Set(Array.from(this.players.values()).map(p => p.name.toLowerCase()));
-    let botName = BOT_NAMES.find(n => !existingNames.has(n.toLowerCase()));
-    if (!botName) {
-      botName = `Advisor ${this.players.size + 1}`;
+    // Assign botProfile using Math.random() against BOT_PROFILES weights
+    const totalWeight = BOT_PROFILES.reduce((sum, p) => sum + p.weight, 0);
+    let r = Math.random() * totalWeight;
+    let selectedProfile = BOT_PROFILES[0];
+    for (const p of BOT_PROFILES) {
+      if (r < p.weight) {
+        selectedProfile = p;
+        break;
+      }
+      r -= p.weight;
     }
 
-    return this.addPlayer({ name: botName, socketId: null, isBot: true, isHost: false });
+    // Select bot's name from that profile's names array
+    const existingNames = new Set(Array.from(this.players.values()).map(p => p.name.toLowerCase()));
+    let botName = selectedProfile.names.find(n => !existingNames.has(n.toLowerCase()));
+    if (!botName) {
+      botName = BOT_NAMES.find(n => !existingNames.has(n.toLowerCase())) || `${selectedProfile.names[0]} ${this.players.size + 1}`;
+    }
+
+    const player = this.addPlayer({ name: botName, socketId: null, isBot: true, isHost: false });
+    player.botProfile = selectedProfile.type;
+    return player;
   }
 
   removeBot(botId) {
@@ -366,7 +382,7 @@ class GameRoom {
 
     const N = this.players.size;
     this.totalRounds = N * Math.ceil(4 / N);
-    this.round = 1;
+    this.round = 0;
 
     // Reset scores for all players
     for (const pid of this.playerOrder) {
@@ -384,7 +400,7 @@ class GameRoom {
           landmarks: this.map.landmarks,
           obstacles: this.map.obstacles
         },
-        chairId: this.playerOrder[0]
+        chairId: null
       });
     }
 
@@ -396,17 +412,29 @@ class GameRoom {
     this.clearTickTimers();
 
     const N = this.playerOrder.length;
-    const chairIndex = (this.round - 1) % N;
-    this.chairId = this.playerOrder[chairIndex];
-    this.chairCounts.set(this.chairId, (this.chairCounts.get(this.chairId) || 0) + 1);
+    if (this.round === 0) {
+      this.chairId = null;
+    } else {
+      const chairIndex = (this.round - 1) % N;
+      this.chairId = this.playerOrder[chairIndex];
+      this.chairCounts.set(this.chairId, (this.chairCounts.get(this.chairId) || 0) + 1);
+    }
 
     // Round start state
     this.tick = 0;
     this.carPos = { row: 4, col: 4, x: 4, y: 4 };
     this.heading = null;
     this.inertiaEarned = false;
-    this.fuel = this.timings.FUEL;
-    this.gavels = this.timings.GAVELS_PER_ROUND;
+
+    if (this.round === 0) {
+      this.fuel = this.timings.ROUND_0_FUEL;
+      this.gavels = 0;
+      this.chairId = null;
+    } else {
+      this.fuel = this.timings.FUEL;
+      this.gavels = this.timings.GAVELS_PER_ROUND;
+    }
+
     this.currentVotes.clear();
     this.currentRoute = [{ tick: 0, row: 4, col: 4, x: 4, y: 4, type: 'START' }];
 
@@ -460,6 +488,23 @@ class GameRoom {
 
   _executeTick() {
     this.tick++;
+
+    // Inject AI votes for bots and autopiloted players
+    for (const player of this.players.values()) {
+      if (player.isBot || player.isAutopiloted) {
+        const profile = player.isAutopiloted ? 'DIPLOMAT' : (player.botProfile || 'LEFTY');
+        const vote = BotLogic.getVote(
+          profile,
+          this.carPos,
+          this.map,
+          this.destinations,
+          Array.from(this.players.values()),
+          this.tick,
+          player.id
+        );
+        if (vote) this.currentVotes.set(player.id, vote);
+      }
+    }
 
     const tickState = {
       tick: this.tick,
@@ -537,11 +582,13 @@ class GameRoom {
       this.map.landmarks
     );
 
-    // Record scores
-    for (const [pid, score] of roundScoresMap.entries()) {
-      const history = this.scores.get(pid) || [];
-      history.push(score);
-      this.scores.set(pid, history);
+    // Record scores only for official rounds (round > 0)
+    if (this.round > 0) {
+      for (const [pid, score] of roundScoresMap.entries()) {
+        const history = this.scores.get(pid) || [];
+        history.push(score);
+        this.scores.set(pid, history);
+      }
     }
 
     const duration = this.timings.DEBRIEF_DURATION;

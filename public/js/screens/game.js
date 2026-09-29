@@ -56,6 +56,12 @@ export class GameScreen {
 
     this.revealRafId = null;
 
+    // Onboarding Tooltip Elements
+    this.tooltipEl = document.getElementById('onboarding-tooltip');
+    this.tooltipTextEl = document.getElementById('tooltip-text');
+    this.tooltipDismissBtn = document.getElementById('tooltip-dismiss');
+    this.tooltipTimer = null;
+
     this._bindEvents();
     this._renderGavels(3);
   }
@@ -65,6 +71,12 @@ export class GameScreen {
       this.muteToggleBtn.addEventListener('click', () => {
         const isMuted = this.app.toggleAudioMute();
         this.muteToggleBtn.textContent = isMuted ? '🔇' : '🔊';
+      });
+    }
+
+    if (this.tooltipDismissBtn) {
+      this.tooltipDismissBtn.addEventListener('click', () => {
+        this.hideTooltip();
       });
     }
   }
@@ -125,7 +137,13 @@ export class GameScreen {
     const chairName = chairPlayer ? chairPlayer.name : 'Director';
 
     // Populate reveal overlay
-    if (this.revealRoundInfo) this.revealRoundInfo.textContent = `${round} of ${totalRounds}`;
+    if (this.revealRoundInfo) {
+      if (round === 0) {
+        this.revealRoundInfo.textContent = 'PRACTICE';
+      } else {
+        this.revealRoundInfo.textContent = `${round} of ${totalRounds}`;
+      }
+    }
     if (this.revealChairInfo) this.revealChairInfo.textContent = chairName;
 
     const lmName = destination
@@ -150,6 +168,14 @@ export class GameScreen {
     // Show overlay
     if (this.revealOverlay) {
       this.revealOverlay.classList.add('active');
+    }
+
+    // Round 0 Onboarding Tooltip: Reveal Phase
+    if (round === 0 || this.app.state.round === 0) {
+      setTimeout(() => {
+        const target = document.querySelector('.game-map-container') || document.querySelector('.reveal-target-card');
+        this.showTooltip("This is your secret destination. Don't tell anyone!", target, 'center');
+      }, 300);
     }
 
     // Server-synced countdown timer
@@ -218,23 +244,38 @@ export class GameScreen {
     });
 
     // 4. Update Info Bar
+    const isRound0 = (this.app.state.round === 0);
     if (this.roundIndicator) {
-      const totalRounds = this.app.state.totalRounds || 3;
-      this.roundIndicator.textContent = `Rd ${this.app.state.round || 1}/${totalRounds}`;
+      if (isRound0) {
+        this.roundIndicator.textContent = 'PRACTICE';
+      } else {
+        const totalRounds = this.app.state.totalRounds || 3;
+        this.roundIndicator.textContent = `Rd ${this.app.state.round || 1}/${totalRounds}`;
+      }
     }
 
+    const maxFuel = isRound0 ? 5 : 20;
+
     if (this.fuelCountText) {
-      this.fuelCountText.textContent = `${fuel}/20`;
+      this.fuelCountText.textContent = `${fuel}/${maxFuel}`;
     }
 
     if (this.fuelBarFill) {
-      const pct = Math.max(0, Math.min(100, (fuel / 20) * 100));
+      const pct = Math.max(0, Math.min(100, (fuel / maxFuel) * 100));
       this.fuelBarFill.style.width = `${pct}%`;
       this.fuelBarFill.classList.remove('warn', 'danger');
-      if (fuel <= 2) {
-        this.fuelBarFill.classList.add('danger');
-      } else if (fuel <= 5) {
-        this.fuelBarFill.classList.add('warn');
+      if (isRound0) {
+        if (fuel <= 1) {
+          this.fuelBarFill.classList.add('danger');
+        } else if (fuel <= 2) {
+          this.fuelBarFill.classList.add('warn');
+        }
+      } else {
+        if (fuel <= 2) {
+          this.fuelBarFill.classList.add('danger');
+        } else if (fuel <= 5) {
+          this.fuelBarFill.classList.add('warn');
+        }
       }
     }
 
@@ -261,6 +302,68 @@ export class GameScreen {
       else if (heading === 'LEFT') arrowChar = '◀';
       else if (heading === 'RIGHT') arrowChar = '▶';
       this.headingArrow.textContent = arrowChar;
+    }
+
+    // Tooltip logic for Round 0 ONLY
+    if (isRound0) {
+      if (tick === 1) {
+        this.showTooltip("Vote to steer the car! The most votes wins.", '.dpad-container', 'top');
+      } else if (tick === 2) {
+        this.showTooltip("You can see everyone's votes, but not their goals.", '#vote-roster-strip', 'bottom');
+      }
+    }
+  }
+
+  showTooltip(text, targetElOrSelector, placement = 'center') {
+    if (!this.tooltipEl || !this.tooltipTextEl) return;
+    this.hideTooltip();
+
+    this.tooltipTextEl.textContent = text;
+    this.tooltipEl.classList.remove('hidden');
+
+    const targetEl = typeof targetElOrSelector === 'string'
+      ? document.querySelector(targetElOrSelector)
+      : targetElOrSelector;
+
+    if (targetEl && this.screenEl) {
+      const targetRect = targetEl.getBoundingClientRect();
+      const screenRect = this.screenEl.getBoundingClientRect();
+
+      const relativeTop = targetRect.top - screenRect.top;
+      const relativeLeft = targetRect.left - screenRect.left;
+
+      if (placement === 'top') {
+        this.tooltipEl.style.top = `${Math.max(10, relativeTop - 12)}px`;
+        this.tooltipEl.style.left = `${relativeLeft + targetRect.width / 2}px`;
+        this.tooltipEl.style.transform = 'translate(-50%, -100%)';
+      } else if (placement === 'bottom') {
+        this.tooltipEl.style.top = `${relativeTop + targetRect.height + 8}px`;
+        this.tooltipEl.style.left = `${relativeLeft + targetRect.width / 2}px`;
+        this.tooltipEl.style.transform = 'translate(-50%, 0)';
+      } else {
+        // center
+        this.tooltipEl.style.top = `${relativeTop + targetRect.height / 2}px`;
+        this.tooltipEl.style.left = `${relativeLeft + targetRect.width / 2}px`;
+        this.tooltipEl.style.transform = 'translate(-50%, -50%)';
+      }
+    } else {
+      this.tooltipEl.style.top = '50%';
+      this.tooltipEl.style.left = '50%';
+      this.tooltipEl.style.transform = 'translate(-50%, -50%)';
+    }
+
+    this.tooltipTimer = setTimeout(() => {
+      this.hideTooltip();
+    }, 4000);
+  }
+
+  hideTooltip() {
+    if (this.tooltipTimer) {
+      clearTimeout(this.tooltipTimer);
+      this.tooltipTimer = null;
+    }
+    if (this.tooltipEl) {
+      this.tooltipEl.classList.add('hidden');
     }
   }
 
@@ -289,5 +392,6 @@ export class GameScreen {
       this.screenEl.classList.remove('active');
     }
     this.endReveal();
+    this.hideTooltip();
   }
 }

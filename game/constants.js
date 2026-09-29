@@ -20,6 +20,7 @@ const TIMINGS = Object.freeze({
   TICK_INTERVAL: 1500,
   DEBRIEF_DURATION: 8000,
   FUEL: 20,
+  ROUND_0_FUEL: 5,
   PARK_LOCKOUT_TICKS: 5,
   GAVELS_PER_ROUND: 3,
   DISCONNECT_GRACE: 30000,
@@ -125,6 +126,12 @@ const PLAYER_LIMITS = Object.freeze({
   MAX_PLAYERS: 8
 });
 
+const BOT_PROFILES = [
+  { type: 'LEFTY', weight: 33, names: ['Lefty', 'Loop', 'Port'] },
+  { type: 'SHADY', weight: 33, names: ['Shady', 'Mirage', 'Bait'] },
+  { type: 'DIPLOMAT', weight: 34, names: ['Diplomat', 'Center', 'Compromise'] }
+];
+
 module.exports = {
   ROOM_CODE_CHARS,
   ROOM_CODE_LENGTH,
@@ -140,6 +147,7 @@ module.exports = {
   EMOTE_COOLDOWN,
   PING_COOLDOWN,
   BOT_NAMES,
+  BOT_PROFILES,
   MAP_SIZE: MAP_CONFIG.MAP_SIZE,
   OBSTACLE_COUNT: MAP_CONFIG.OBSTACLE_COUNT,
   LANDMARK_COUNT: MAP_CONFIG.LANDMARK_COUNT,
