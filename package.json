@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/**/*.test.js"
+    "test": "node tests/test_seeded_rng.js && node tests/test_map_generator.js && node tests/test_destination_assigner.js && node tests/test_tick_resolver.js && node tests/test_scoring.js && node tests/test_room_lifecycle.js && node tests/test_game_flow.js && node tests/test_play_again_soak.js && node tests/test_timer_cleanup.js && node tests/test_monte_carlo_balance.js",
+    "test:node": "node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
