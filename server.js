@@ -32,6 +32,36 @@ const io = new Server(server, {
 // Room Manager instance
 const roomManager = new RoomManager({ io });
 
+// Simple token bucket rate limiter: Max 10 events per rolling 1000ms per socket
+const rateLimits = new Map();
+function isRateLimited(socketId) {
+  const now = Date.now();
+  let limit = rateLimits.get(socketId);
+  if (!limit) {
+    limit = { count: 1, resetTime: now + 1000 };
+    rateLimits.set(socketId, limit);
+    return false;
+  }
+  
+  if (now > limit.resetTime) {
+    limit.count = 1;
+    limit.resetTime = now + 1000;
+    return false;
+  }
+  
+  limit.count++;
+  return limit.count > 10;
+}
+
+// Cleanup rate limits periodically to prevent memory leaks
+const rateLimitCleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [id, limit] of rateLimits.entries()) {
+    if (now > limit.resetTime) rateLimits.delete(id);
+  }
+}, 60000);
+if (rateLimitCleanupInterval.unref) rateLimitCleanupInterval.unref();
+
 // JSON body parser
 app.use(express.json());
 
@@ -147,6 +177,10 @@ io.on('connection', (socket) => {
   // 4. VOTE
   socket.on('vote', (data = {}, callback) => {
     try {
+      if (isRateLimited(socket.id)) {
+        socket.emit('error', { message: 'Rate limit exceeded. Please slow down.' });
+        return;
+      }
       const roomCode = roomManager.socketToRoom.get(socket.id);
       const playerId = roomManager.socketToPlayer.get(socket.id);
       const room = roomManager.getRoom(roomCode);
@@ -166,6 +200,10 @@ io.on('connection', (socket) => {
   // 5. EMOTE
   socket.on('emote', (data = {}, callback) => {
     try {
+      if (isRateLimited(socket.id)) {
+        socket.emit('error', { message: 'Rate limit exceeded. Please slow down.' });
+        return;
+      }
       const roomCode = roomManager.socketToRoom.get(socket.id);
       const playerId = roomManager.socketToPlayer.get(socket.id);
       const room = roomManager.getRoom(roomCode);
@@ -190,6 +228,10 @@ io.on('connection', (socket) => {
   // 6. PING LANDMARK
   socket.on('ping', (data = {}, callback) => {
     try {
+      if (isRateLimited(socket.id)) {
+        socket.emit('error', { message: 'Rate limit exceeded. Please slow down.' });
+        return;
+      }
       const roomCode = roomManager.socketToRoom.get(socket.id);
       const playerId = roomManager.socketToPlayer.get(socket.id);
       const room = roomManager.getRoom(roomCode);
@@ -350,6 +392,7 @@ io.on('connection', (socket) => {
 
   // 13. DISCONNECT
   socket.on('disconnect', () => {
+    rateLimits.delete(socket.id);
     const { room, player, removed } = roomManager.handleDisconnect(socket.id);
     if (room && player) {
       io.to(room.code).emit('player-left', {
@@ -370,5 +413,18 @@ if (require.main === module) {
     console.log(`[STEERING COMMITTEE] Server listening on http://${HOST}:${PORT} (NODE_ENV=${nodeEnv})`);
   });
 }
+
+function gracefulShutdown(signal) {
+  console.log(`\n[STEERING COMMITTEE] Received ${signal}. Shutting down gracefully...`);
+  io.emit('error', { message: 'Server is restarting for maintenance. You will be disconnected.' });
+  
+  // Give clients 1 second to receive the error before killing the process
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = { app, server, io, roomManager };

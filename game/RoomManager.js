@@ -50,6 +50,10 @@ class RoomManager {
    * @returns {{ room: GameRoom, player: Object }}
    */
   createRoom(hostSocketId, options = {}) {
+    if (this.rooms.size >= 50) {
+      throw new Error('Server is currently at capacity. Please try again later.');
+    }
+
     const roomCode = this.generateRoomCode();
     const room = new GameRoom(roomCode, hostSocketId, {
       io: this.io,

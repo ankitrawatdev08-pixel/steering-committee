@@ -132,6 +132,8 @@ const BOT_PROFILES = [
   { type: 'DIPLOMAT', weight: 34, names: ['Diplomat', 'Center', 'Compromise'] }
 ];
 
+const MAX_CONCURRENT_ROOMS = 50;
+
 module.exports = {
   ROOM_CODE_CHARS,
   ROOM_CODE_LENGTH,
@@ -148,6 +150,7 @@ module.exports = {
   PING_COOLDOWN,
   BOT_NAMES,
   BOT_PROFILES,
+  MAX_CONCURRENT_ROOMS,
   MAP_SIZE: MAP_CONFIG.MAP_SIZE,
   OBSTACLE_COUNT: MAP_CONFIG.OBSTACLE_COUNT,
   LANDMARK_COUNT: MAP_CONFIG.LANDMARK_COUNT,
