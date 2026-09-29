@@ -4,116 +4,405 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>STEERING COMMITTEE — Everyone steers. Nobody agrees.</title>
+  <meta name="description" content="A real-time multiplayer browser party game. 2-8 players live-vote every 1.5 seconds to steer one car to hidden destinations.">
+  
+  <!-- Typography: Playfair Display + Work Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/css/styles.css">
-  <style>
-    :root {
-      --bg-parchment: #FBF9F5;
-      --bg-card: #F4EFE6;
-      --text-primary: #2C221E;
-      --text-secondary: #6B5B52;
-      --accent-gold: #D4A338;
-      --accent-emerald: #1F6B4B;
-      --border-subtle: #D8CEBE;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      background-color: var(--bg-parchment);
-      color: var(--text-primary);
-      font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-    }
-    .dossier {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 40px 32px;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 10px 25px rgba(44, 34, 30, 0.06);
-      position: relative;
-    }
-    .confidential-stamp {
-      display: inline-block;
-      border: 2px solid var(--accent-emerald);
-      color: var(--accent-emerald);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 2px;
-      font-size: 0.75rem;
-      padding: 4px 10px;
-      border-radius: 3px;
-      transform: rotate(-3deg);
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-      letter-spacing: -0.5px;
-    }
-    .tagline {
-      font-style: italic;
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      margin-bottom: 24px;
-    }
-    .memo-body {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 20px 0;
-      margin-bottom: 24px;
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #EAE3D2;
-      color: var(--text-primary);
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 20px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--accent-gold);
-      border-radius: 50%;
-    }
-  </style>
 </head>
 <body>
-  <div class="dossier">
-    <div class="confidential-stamp">Internal Memorandum</div>
-    <h1>STEERING COMMITTEE</h1>
-    <p class="tagline">“Everyone steers. Nobody agrees.”</p>
-    <div class="memo-body">
-      The Board of Directors is assembling. 2 to 8 committee members will share the wheel of a single company vehicle, navigating toward competing secret corporate objectives.
-    </div>
-    <div class="status-badge">
-      <span class="status-dot"></span>
-      <span>Executive Session Adjourned — Phase 0 Ready</span>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Reconnection Overlay -->
+  <div id="reconnect-overlay" class="modal-overlay">
+    <div class="modal-card" style="text-align: center; max-width: 320px;">
+      <div class="stamp red" style="margin-bottom: 12px;">CONNECTION DISRUPTED</div>
+      <h3 style="margin-bottom: 8px;">Reconnecting to Boardroom...</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Attempting to re-establish secure communications with the Steering Committee server.
+      </p>
+      <div style="display: flex; justify-content: center;">
+        <div class="countdown-ring-box" style="animation: subtlePulse 1s infinite alternate;">⚖️</div>
+      </div>
     </div>
   </div>
+
+  <!-- Main Mobile App Frame -->
+  <div id="app">
+
+    <!-- ====================================================================
+         SCREEN 1: LANDING SCREEN
+         ==================================================================== -->
+    <section id="screen-landing" class="screen active" aria-label="Landing Screen">
+      <div class="landing-dossier dossier-card">
+        
+        <div class="landing-header">
+          <div class="stamp">OFFICIAL DOSSIER #001</div>
+          <h1>STEERING COMMITTEE</h1>
+          <p class="tagline">"Everyone steers. Nobody agrees."</p>
+        </div>
+
+        <div class="landing-memo-box">
+          <strong>MEMORANDUM:</strong> Welcome to executive deadlock. Up to 8 directors steer one single company vehicle. Every 1.5 seconds, all votes are counted. Your destination is top-secret.
+        </div>
+
+        <div class="input-group">
+          <label for="player-name-input" class="label-caps">Director's Identity</label>
+          <input 
+            type="text" 
+            id="player-name-input" 
+            class="input-text" 
+            placeholder="Enter your title, Director..." 
+            maxlength="12" 
+            autocomplete="off"
+            autofocus
+          >
+        </div>
+
+        <div class="landing-actions">
+          <button id="btn-create-room" class="btn btn-primary">
+            CONVENE NEW MEETING
+          </button>
+
+          <button id="btn-show-join" class="btn btn-secondary">
+            JOIN EXISTING MEETING
+          </button>
+
+          <!-- Hidden until "JOIN EXISTING MEETING" is tapped -->
+          <div id="join-room-section" class="join-section" style="display: none;">
+            <div class="input-group">
+              <label for="room-code-input" class="label-caps">Meeting Room Code</label>
+              <input 
+                type="text" 
+                id="room-code-input" 
+                class="input-text input-code" 
+                placeholder="ABCD" 
+                maxlength="4" 
+                autocomplete="off"
+              >
+            </div>
+            <button id="btn-join-room" class="btn btn-primary">
+              ENTER BOARDROOM
+            </button>
+          </div>
+
+          <button id="btn-open-rules" class="link-subtle" type="button">
+            Read Rules of Governance (How to Play)
+          </button>
+        </div>
+
+        <div class="landing-footer">
+          Corporate Governance Simulator &bull; Handshake AI Skills Studio 2026
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 2: LOBBY SCREEN
+         ==================================================================== -->
+    <section id="screen-lobby" class="screen" aria-label="Meeting Lobby">
+      <div class="lobby-header">
+        <div class="stamp">MEETING ROOM CONVENED</div>
+        
+        <div id="lobby-room-code-badge" class="room-code-badge" title="Tap to copy Room Code">
+          <span class="label-caps">MEETING ROOM</span>
+          <span id="lobby-room-code" class="room-code-value">----</span>
+          <span id="lobby-copy-hint" class="copy-hint">TAP TO COPY CODE</span>
+        </div>
+      </div>
+
+      <div class="attendance-register">
+        <div class="register-title">
+          <span class="label-caps">ATTENDANCE REGISTER</span>
+          <span id="lobby-player-count" class="label-caps">0/8 DIRECTORS PRESENT</span>
+        </div>
+        <div id="lobby-player-list" class="player-list">
+          <!-- Populated by lobby.js -->
+        </div>
+      </div>
+
+      <div class="lobby-controls">
+        <!-- Host Controls Panel -->
+        <div id="lobby-host-panel" class="dossier-card" style="padding: 12px; display: none; gap: 8px;">
+          <div class="bot-controls-row">
+            <button id="btn-add-bot" class="btn btn-secondary btn-sm" type="button">
+              + ADD BOT
+            </button>
+            <button id="btn-remove-bot" class="btn btn-secondary btn-sm" type="button">
+              - REMOVE BOT
+            </button>
+          </div>
+          <button id="btn-start-game" class="btn btn-primary" type="button" disabled>
+            START MEETING (Min 2)
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-lobby-rules" class="btn btn-secondary btn-sm" style="flex: 1;" type="button">
+            Rules of Order
+          </button>
+          <button id="btn-leave-room" class="btn btn-danger btn-sm" type="button">
+            Leave Room
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 3: GAME SCREEN (REVEAL OVERLAY + STEERING PHASE)
+         ==================================================================== -->
+    <section id="screen-game" class="screen" aria-label="Game Board">
+      
+      <!-- Top Info Bar -->
+      <div class="game-info-bar">
+        <div class="info-item">
+          <span id="game-round-indicator" class="round-pill">Rd 1/3</span>
+        </div>
+
+        <div class="fuel-gauge-container">
+          <div class="fuel-gauge-header">
+            <span>BUDGET</span>
+            <span id="fuel-count-text">20/20</span>
+          </div>
+          <div class="fuel-bar-track">
+            <div id="fuel-bar-fill" class="fuel-bar-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div id="gavels-container" class="gavels-display" title="Remaining Gavels">
+            <!-- 3 gavels rendered via JS -->
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div id="chair-indicator-badge" class="chair-badge" title="Current Chairperson">
+            <span>⚖️</span>
+            <span id="chair-name-text">Chair</span>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div id="heading-arrow-display" class="heading-arrow-box" title="Car Heading">-</div>
+          <button id="btn-mute-toggle" class="btn-mute" type="button" title="Toggle Sound">🔊</button>
+        </div>
+      </div>
+
+      <!-- Center Map Container -->
+      <div class="game-map-container">
+        <canvas id="game-canvas" width="400" height="400"></canvas>
+      </div>
+
+      <!-- Vote Roster Strip -->
+      <div id="vote-roster-strip" class="vote-roster-strip">
+        <!-- Rendered dynamically by voteRoster.js -->
+      </div>
+
+      <!-- Bottom Controls: D-Pad & Emote Bar -->
+      <div class="game-bottom-controls">
+        <div class="dpad-container">
+          <button id="dpad-btn-up" class="dpad-btn dpad-up" data-dir="UP" aria-label="Vote Up">▲</button>
+          <button id="dpad-btn-left" class="dpad-btn dpad-left" data-dir="LEFT" aria-label="Vote Left">◀</button>
+          <button id="dpad-btn-park" class="dpad-btn dpad-park disabled" data-dir="PARK" aria-label="Vote Park">P</button>
+          <button id="dpad-btn-right" class="dpad-btn dpad-right" data-dir="RIGHT" aria-label="Vote Right">▶</button>
+          <button id="dpad-btn-down" class="dpad-btn dpad-down" data-dir="DOWN" aria-label="Vote Down">▼</button>
+        </div>
+
+        <div id="emote-bar" class="emote-bar">
+          <!-- 6 Emote buttons populated by emotes.js -->
+        </div>
+      </div>
+
+      <!-- Reveal Phase Overlay -->
+      <div id="game-reveal-overlay" aria-modal="true">
+        <div class="reveal-dossier">
+          <div class="stamp red">MEMORANDUM: CONFIDENTIAL</div>
+          
+          <h2 style="font-size: 1.3rem;">DESTINATION ASSIGNMENT</h2>
+          
+          <div class="reveal-target-card">
+            <span class="label-caps">YOUR SECRET DESTINATION</span>
+            <div id="reveal-landmark-shape" class="reveal-shape-preview"></div>
+            <div id="reveal-landmark-name" style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">
+              Landmark
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+              Guide the committee car here to maximize your executive quarterly bonus.
+            </p>
+          </div>
+
+          <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.85rem;">
+            <div>
+              <span class="label-caps">ROUND</span>
+              <div id="reveal-round-info" style="font-weight: 700;">1 of 3</div>
+            </div>
+            <div>
+              <span class="label-caps">CHAIRPERSON</span>
+              <div id="reveal-chair-info" style="font-weight: 700;">Director</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div id="reveal-countdown-timer" class="countdown-ring-box">8</div>
+            <span class="label-caps">STEERING COMMENCES SHORTLY</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 4: DEBRIEF SCREEN
+         ==================================================================== -->
+    <section id="screen-debrief" class="screen" aria-label="Round Debrief">
+      <div class="debrief-header">
+        <div class="stamp">OFFICIAL MEETING MINUTES</div>
+        <h2 id="debrief-title">ROUND 1 RESULTS</h2>
+        <p id="debrief-subtitle" class="tagline">All director objectives revealed</p>
+      </div>
+
+      <div class="score-table-card">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>Director</th>
+              <th>Target</th>
+              <th>Dist</th>
+              <th>Pts</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="debrief-score-tbody">
+            <!-- Populated by debrief.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="debrief-actions">
+        <div class="timer-progress-track">
+          <div id="debrief-timer-bar" class="timer-progress-bar"></div>
+        </div>
+        <button id="btn-debrief-ready" class="btn btn-primary" type="button">
+          READY FOR NEXT ROUND (8s)
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SCREEN 5: GAME OVER / RESULTS
+         ==================================================================== -->
+    <section id="screen-results" class="screen" aria-label="Game Over Results">
+      <div class="results-header">
+        <div class="stamp gold">ANNUAL REPORT</div>
+        <h2>FINAL STANDINGS</h2>
+        <p class="tagline">The committee has adjourned sine die</p>
+      </div>
+
+      <!-- Top 3 Podium -->
+      <div id="podium-container" class="podium-container">
+        <!-- Populated by results.js -->
+      </div>
+
+      <!-- Full Standings List -->
+      <div class="standings-list-card">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Director</th>
+              <th>Total</th>
+              <th>Best</th>
+              <th>Exact</th>
+            </tr>
+          </thead>
+          <tbody id="results-standings-tbody">
+            <!-- Populated by results.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-play-again" class="btn btn-primary" type="button">
+          RECONVENE (PLAY AGAIN)
+        </button>
+        <button id="btn-results-leave" class="btn btn-secondary" type="button">
+          ADJOURN (EXIT)
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ====================================================================
+       MODAL: RULES OF GOVERNANCE (HOW TO PLAY)
+       ==================================================================== -->
+  <div id="modal-how-to-play" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>RULES OF GOVERNANCE</h3>
+        <button id="btn-close-rules" class="btn-close" type="button" aria-label="Close Rules">&times;</button>
+      </div>
+
+      <div class="rules-section">
+        <div class="rule-step">
+          <div class="step-num">1.</div>
+          <div>
+            <strong>One Car, Many Hands:</strong> All 2–8 directors simultaneously steer ONE single executive sedan across a 9×9 municipal grid.
+          </div>
+        </div>
+
+        <div class="rule-step">
+          <div class="step-num">2.</div>
+          <div>
+            <strong>Hidden Destinations:</strong> Each round, you receive a secret landmark assignment. Your votes are public, but your target is confidential.
+          </div>
+        </div>
+
+        <div class="rule-step">
+          <div class="step-num">3.</div>
+          <div>
+            <strong>1.5-Second Ticks:</strong> Every tick, the direction with the most votes wins. Ties are broken by inertia (previous heading), or the Chairperson breaks it using a gavel.
+          </div>
+        </div>
+
+        <div class="rule-step">
+          <div class="step-num">4.</div>
+          <div>
+            <strong>Obstacles & Inertia:</strong> Hitting a building loses your turn's momentum. Plan turns ahead!
+          </div>
+        </div>
+
+        <div class="rule-step">
+          <div class="step-num">5.</div>
+          <div>
+            <strong>PARK & Budget:</strong> From tick 6 onwards, voting PARK lets the committee freeze the car. If PARK wins, or fuel (budget) reaches 0, the round ends.
+          </div>
+        </div>
+
+        <div class="rule-step">
+          <div class="step-num">6.</div>
+          <div>
+            <strong>Scoring:</strong> Exact destination hit = 100 pts. Distance 1 = 60 pts, dist 2 = 30 pts, dist 3 = 10 pts. Highest total score after all rounds wins the Chairman's seat!
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-dismiss-rules" class="btn btn-secondary" style="width: 100%;" type="button">
+        ACKNOWLEDGED
+      </button>
+    </div>
+  </div>
+
+  <!-- Socket.io client script served automatically by server -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/app.js"></script>
+
+  <!-- ES Module Application Entrypoint -->
+  <script type="module" src="/js/app.js"></script>
+
 </body>
 </html>
