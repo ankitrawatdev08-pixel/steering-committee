@@ -189,7 +189,13 @@ export class LobbyScreen {
     // Host Panel Visibility & Controls
     const isLocalHost = (playerId === hostId);
     if (this.hostPanel) {
-      this.hostPanel.style.display = isLocalHost ? 'flex' : 'none';
+      if (isLocalHost) {
+        this.hostPanel.classList.remove('is-hidden');
+        this.hostPanel.style.display = 'flex';
+      } else {
+        this.hostPanel.classList.add('is-hidden');
+        this.hostPanel.style.display = 'none';
+      }
     }
 
     if (isLocalHost) {

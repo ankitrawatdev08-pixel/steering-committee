@@ -22,10 +22,16 @@ export class LandingScreen {
   _bindEvents() {
     if (this.showJoinBtn && this.joinSection) {
       this.showJoinBtn.addEventListener('click', () => {
-        const isHidden = this.joinSection.style.display === 'none';
-        this.joinSection.style.display = isHidden ? 'flex' : 'none';
-        if (isHidden && this.roomCodeInput) {
-          this.roomCodeInput.focus();
+        const isHidden = this.joinSection.classList.contains('is-hidden') || this.joinSection.style.display === 'none';
+        if (isHidden) {
+          this.joinSection.classList.remove('is-hidden');
+          this.joinSection.style.display = 'flex';
+          if (this.roomCodeInput) {
+            this.roomCodeInput.focus();
+          }
+        } else {
+          this.joinSection.classList.add('is-hidden');
+          this.joinSection.style.display = 'none';
         }
       });
     }
@@ -50,7 +56,8 @@ export class LandingScreen {
     if (this.nameInput) {
       this.nameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-          if (this.joinSection && this.joinSection.style.display !== 'none') {
+          const isJoinOpen = this.joinSection && !this.joinSection.classList.contains('is-hidden');
+          if (isJoinOpen) {
             this.handleJoin();
           } else {
             this.handleCreate();

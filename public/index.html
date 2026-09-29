@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STEERING COMMITTEE — Everyone steers. Nobody agrees.</title>
   <meta name="description" content="A real-time multiplayer browser party game. 2-8 players live-vote every 1.5 seconds to steer one car to hidden destinations.">
   
@@ -19,15 +19,15 @@
   <div id="toast-container" aria-live="polite"></div>
 
   <!-- Reconnection Overlay -->
-  <div id="reconnect-overlay" class="modal-overlay">
-    <div class="modal-card" style="text-align: center; max-width: 320px;">
-      <div class="stamp red" style="margin-bottom: 12px;">CONNECTION DISRUPTED</div>
-      <h3 style="margin-bottom: 8px;">Reconnecting to Boardroom...</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+  <div id="reconnect-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Reconnection Notice">
+    <div class="modal-card reconnect-card">
+      <div class="stamp red reconnect-stamp">CONNECTION DISRUPTED</div>
+      <h3 class="reconnect-title">Reconnecting to Boardroom...</h3>
+      <p class="reconnect-desc">
         Attempting to re-establish secure communications with the Steering Committee server.
       </p>
-      <div style="display: flex; justify-content: center;">
-        <div class="countdown-ring-box" style="animation: subtlePulse 1s infinite alternate;">⚖️</div>
+      <div class="flex-center">
+        <div class="countdown-ring-box pulse-icon">⚖️</div>
       </div>
     </div>
   </div>
@@ -65,16 +65,16 @@
         </div>
 
         <div class="landing-actions">
-          <button id="btn-create-room" class="btn btn-primary">
+          <button id="btn-create-room" class="btn btn-primary" type="button">
             CONVENE NEW MEETING
           </button>
 
-          <button id="btn-show-join" class="btn btn-secondary">
+          <button id="btn-show-join" class="btn btn-secondary" type="button">
             JOIN EXISTING MEETING
           </button>
 
           <!-- Hidden until "JOIN EXISTING MEETING" is tapped -->
-          <div id="join-room-section" class="join-section" style="display: none;">
+          <div id="join-room-section" class="join-section is-hidden">
             <div class="input-group">
               <label for="room-code-input" class="label-caps">Meeting Room Code</label>
               <input 
@@ -86,7 +86,7 @@
                 autocomplete="off"
               >
             </div>
-            <button id="btn-join-room" class="btn btn-primary">
+            <button id="btn-join-room" class="btn btn-primary" type="button">
               ENTER BOARDROOM
             </button>
           </div>
@@ -128,7 +128,7 @@
 
       <div class="lobby-controls">
         <!-- Host Controls Panel -->
-        <div id="lobby-host-panel" class="dossier-card" style="padding: 12px; display: none; gap: 8px;">
+        <div id="lobby-host-panel" class="dossier-card lobby-host-panel is-hidden">
           <div class="bot-controls-row">
             <button id="btn-add-bot" class="btn btn-secondary btn-sm" type="button">
               + ADD BOT
@@ -142,8 +142,8 @@
           </button>
         </div>
 
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-lobby-rules" class="btn btn-secondary btn-sm" style="flex: 1;" type="button">
+        <div class="btn-row">
+          <button id="btn-lobby-rules" class="btn btn-secondary btn-sm flex-1" type="button">
             Rules of Order
           </button>
           <button id="btn-leave-room" class="btn btn-danger btn-sm" type="button">
@@ -170,7 +170,7 @@
             <span id="fuel-count-text">20/20</span>
           </div>
           <div class="fuel-bar-track">
-            <div id="fuel-bar-fill" class="fuel-bar-fill" style="width: 100%;"></div>
+            <div id="fuel-bar-fill" class="fuel-bar-fill"></div>
           </div>
         </div>
 
@@ -219,35 +219,35 @@
       </div>
 
       <!-- Reveal Phase Overlay -->
-      <div id="game-reveal-overlay" aria-modal="true">
+      <div id="game-reveal-overlay" role="dialog" aria-modal="true" aria-label="Destination Assignment">
         <div class="reveal-dossier">
           <div class="stamp red">MEMORANDUM: CONFIDENTIAL</div>
           
-          <h2 style="font-size: 1.3rem;">DESTINATION ASSIGNMENT</h2>
+          <h2 class="reveal-heading">DESTINATION ASSIGNMENT</h2>
           
           <div class="reveal-target-card">
             <span class="label-caps">YOUR SECRET DESTINATION</span>
             <div id="reveal-landmark-shape" class="reveal-shape-preview"></div>
-            <div id="reveal-landmark-name" style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">
+            <div id="reveal-landmark-name" class="reveal-landmark-title">
               Landmark
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+            <p class="reveal-landmark-desc">
               Guide the committee car here to maximize your executive quarterly bonus.
             </p>
           </div>
 
-          <div style="display: flex; justify-content: space-around; width: 100%; font-size: 0.85rem;">
+          <div class="reveal-meta-row">
             <div>
               <span class="label-caps">ROUND</span>
-              <div id="reveal-round-info" style="font-weight: 700;">1 of 3</div>
+              <div id="reveal-round-info" class="reveal-meta-val">1 of 3</div>
             </div>
             <div>
               <span class="label-caps">CHAIRPERSON</span>
-              <div id="reveal-chair-info" style="font-weight: 700;">Director</div>
+              <div id="reveal-chair-info" class="reveal-meta-val">Director</div>
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div class="reveal-timer-group">
             <div id="reveal-countdown-timer" class="countdown-ring-box">8</div>
             <span class="label-caps">STEERING COMMENCES SHORTLY</span>
           </div>
@@ -326,7 +326,7 @@
         </table>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="actions-col">
         <button id="btn-play-again" class="btn btn-primary" type="button">
           RECONVENE (PLAY AGAIN)
         </button>
@@ -341,7 +341,7 @@
   <!-- ====================================================================
        MODAL: RULES OF GOVERNANCE (HOW TO PLAY)
        ==================================================================== -->
-  <div id="modal-how-to-play" class="modal-overlay" aria-hidden="true">
+  <div id="modal-how-to-play" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Rules of Governance">
     <div class="modal-card">
       <div class="modal-header">
         <h3>RULES OF GOVERNANCE</h3>
@@ -392,7 +392,7 @@
         </div>
       </div>
 
-      <button id="btn-dismiss-rules" class="btn btn-secondary" style="width: 100%;" type="button">
+      <button id="btn-dismiss-rules" class="btn btn-secondary w-full" type="button">
         ACKNOWLEDGED
       </button>
     </div>
